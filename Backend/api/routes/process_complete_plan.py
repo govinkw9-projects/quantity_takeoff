@@ -1,32 +1,25 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from models import ProcessPDFTemplateMatchingResponse2, LegendTemplateResponse2
 from core.pdf_to_images.processpdf import process_pdf
-from core.template_matching.ProcessBoundingBoxYolov8 import getBoundingBoxes_parallel as getbboxes_yolov8
+from core.detection.symbol.process_symbols import detect_symbols
 from core.pdf_to_images.getimages import patch_sections_together, adjust_bounding_boxes
-from core.template_similarity.dino_vectorbase import filter_bounding_boxes, get_vectorstore, find_matches_for_template
-from core.segment_symbol.yolov8.process_symbol import process_symbol as psymbol_yolov8
+from core.template_similarity.dino_vectorbase import filter_bounding_boxes
+from core.detection.legend.process_legend import detection_legend
 from core.apikey_auth import APIKeyAuth
-from fastapi import Security, HTTPException, Depends
-from core.config import global_params, settings
+from fastapi import Security, Depends
+from core.config import global_params, settings, logger
 from api.routes.utils import image_to_base64
 from typing import Optional, List, Tuple
-import glob 
 import os
 import cv2 
 import numpy as np 
-import time 
-import base64
-from io import BytesIO
-from PIL import Image
-from pathlib import Path
+import time  
 import json 
 import logging 
 
-logger = settings.configured_logger
 
-logger_active = logger.isEnabledFor(logging.INFO)
+logger_active = logger.isEnabledFor(logging.DEBUG)
 
-print(f"LOGGER ACTIVE", logger_active)
 router = APIRouter()
 
 
@@ -52,13 +45,16 @@ async def process_symbols_detection(image: np.ndarray,
 
     original_complete_image = image
     original_shape = original_complete_image.shape 
-    logger.info(f"Full image shape {original_shape}")
-    logger.info(f"Sucessfully processed the patches of the image, found {len(sections_list)} sections")
+    logger.debug(f"Full image shape {original_shape}")
+    logger.debug(f"Sucessfully processed the patches of the image, found {len(sections_list)} sections")
     processed_sections = []
     processed_boxes = []
     # Step2: Process each section for template matching 
-    processed_sections, processed_boxes = await getbboxes_yolov8(sections_list, 
-                                                                global_params.max_workers)
+    try:
+      processed_sections, processed_boxes = await detect_symbols(sections_list)
+    except Exception as ex: 
+        logger.info(f"Got error while performing detection of symbols: {ex}")
+
     if(logger_active):
         try:
             json_data = {}
@@ -67,8 +63,9 @@ async def process_symbols_detection(image: np.ndarray,
             json.dump(json_data,
                     open(sections_in_folder+f"/processed/all-symbol-detected.json","w"),
                     indent=4)
-        except:
-            logger.info("Could not save Processed Boxes {idx}")
+        except Exception as ex:
+            logger.info(f"Could not save Processed Boxes {ex}")
+
     # Step3: Put together everything wrt to the original image
     # Step3.1: Put together the sections to get back the complete image 
     process_complete_image = patch_sections_together(processed_sections, 
@@ -79,7 +76,7 @@ async def process_symbols_detection(image: np.ndarray,
         cv2.imwrite(f"static/images/all_result.png",process_complete_image)
     # Step3.2: Adjust the bounding boxes of the sections to get bounding boxes wrt. to complete image. 
     adjusted_boxes = adjust_bounding_boxes(processed_boxes, locations_sections)
-    logger.info("adjusting boxes")
+    logger.debug("adjusting boxes")
 
     drawn_original_complete_image = image 
     show_with_color = (255,120,50)
@@ -91,8 +88,9 @@ async def process_symbols_detection(image: np.ndarray,
                 try:
                   json_data.update({f"bbox-{i}":adjusted_boxes[i]})
                   json.dump(json_data,open(sections_in_folder+f"/processed/adjusted_symbols.json","w"),indent=4)
-                except:
-                    pass
+                except Exception as ex:
+                    logger.info(f"Could not save processed detection as json {ex}")
+
     return adjusted_boxes,drawn_original_complete_image
 
 @router.post("/process_complete_plan", response_model=ProcessPDFTemplateMatchingResponse2)
@@ -168,52 +166,42 @@ async def get_templates_from_pdf(
     """
 
 
-    save_symbols_path = "temp"
+    save_symbols_path = global_params.temp_dir
     start_time = time.time()
     # Step1: Get the sections of the page of the pdf which can be found in sections_in_folder
-    process_pdf_response= await process_pdf(file=pdffile, 
-                                            page_num=page_num,
-                                            section_size=global_params.section_size)
+    try:
+      process_pdf_response= await process_pdf(file=pdffile, 
+                                              page_num=page_num)
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"Could not convert pdf to sections: {ex}")
     selected_page_image, image_path, sections_in_folder,sections_nparray_list,locations_sections= process_pdf_response
-    logger.info(f"Obtained {len(locations_sections)} sections from the pdf image")
+    logger.debug(f"Obtained {len(locations_sections)} sections from the pdf image")
     
     all_symbols_drawn_image = selected_page_image.copy()
     if(logger_active):
         save_symbols_path = sections_in_folder+"/symbols"
         os.makedirs(sections_in_folder+"/processed", exist_ok=True)
 
-    logger.info(f"Detecting symbols in legend image")
-    symbols_nparray_list = await psymbol_yolov8(file=legendImageFile,
+    logger.debug(f"Detecting symbols in legend image")
+    symbols_nparray_list = await detection_legend(file=legendImageFile,
                                                 save_symbols_path=save_symbols_path)
 
-    logger.info(f"Detected {len(symbols_nparray_list)} symbols in the legend image")         
-    original_complete_image_base64 = image_to_base64(selected_page_image) # Output1
+    logger.debug(f"Detected {len(symbols_nparray_list)} symbols in the legend image")         
     all_adjusted_boxes,drawn_original_complete_image = await process_symbols_detection(selected_page_image, 
-                                                        sections_in_folder,
-                                                        sections_nparray_list,
-                                                        locations_sections)
+                                                                                      sections_in_folder,
+                                                                                      sections_nparray_list,
+                                                                                      locations_sections)
 
     template_response = []
     
     json_data = {}
 
-    #vectorstore = await get_vectorstore(all_adjusted_boxes,drawn_original_complete_image)
-
-    # refined_bounding_boxes_list = await filter_bounding_boxes(boxes=all_adjusted_boxes,
-    #                                                          full_image=drawn_original_complete_image,target_template_list=symbols_nparray_list)
-
     for idx,template_np_image in enumerate(symbols_nparray_list):
         # Step2: Process each template image to get the final bounding boxes wrt to the full complete image along with the bounding boxes drawn complete image
-        logger.info(f"Processing template matching for symbol {idx+1} out of {len(symbols_nparray_list)}") 
+        logger.debug(f"Processing template matching for symbol {idx+1} out of {len(symbols_nparray_list)}") 
         
         refined_bounding_boxes = await filter_bounding_boxes(boxes=all_adjusted_boxes,
                                                              full_image=drawn_original_complete_image,target_template=template_np_image)
-        
-        # refined_bounding_boxes = await  find_matches_for_template(boxes=all_adjusted_boxes,
-        #                                                           target_template=template_np_image,
-        #                                                           vectorstore=vectorstore)
-
-        #refined_bounding_boxes = refined_bounding_boxes_list[idx]
 
         if(logger_active):
             try:
@@ -221,7 +209,7 @@ async def get_templates_from_pdf(
                 json.dump(json_data,open(sections_in_folder+f"/processed/all-symbol-refined-detected.json","w"),
                             indent=4)
             except:
-                logger.info("Could not save Processed Boxes {idx}")
+                logger.debug("Could not save Processed Boxes {idx}")
 
         try:
             show_with_color = global_params.color_lists[idx]
@@ -253,8 +241,8 @@ async def get_templates_from_pdf(
             cv2.imwrite(sections_in_folder+f"/processed/all-symbols-refined-detected.png",all_symbols_drawn_image)
             cv2.imwrite(f"static/images/result.png",all_symbols_drawn_image)
     
-        logger.info(f"Found {len(refined_bounding_boxes)} templates out of {len(all_adjusted_boxes)}")
-        logger.info(f"Template matching completed for {idx+1} out of {len(symbols_nparray_list)}")
+        logger.debug(f"Found {len(refined_bounding_boxes)} templates out of {len(all_adjusted_boxes)}")
+        logger.debug(f"Template matching completed for {idx+1} out of {len(symbols_nparray_list)}")
 
     show_with_color = (125,125,125)
     for _, bbox in enumerate(all_adjusted_boxes):

@@ -3,12 +3,11 @@ import numpy as np
 import cv2 
 import onnx
 import os 
-from core.config import global_params, settings
+from core.config import global_params, logger
 import logging
 from fastapi import HTTPException
 
-logger = settings.configured_logger
-logger_active = logger.isEnabledFor(logging.INFO)
+logger_active = logger.isEnabledFor(logging.DEBUG)
 
 def pairwise_distance_numpy(vector1, vector2):
     """

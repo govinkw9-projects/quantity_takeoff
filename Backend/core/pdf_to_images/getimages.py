@@ -2,13 +2,12 @@ import os
 from PIL import Image
 import numpy as np 
 import shutil 
-from core.config import global_params, settings
+from core.config import global_params, logger
 import logging
 
-logger = settings.configured_logger
-logger_active = logging.getLogger().isEnabledFor(logging.INFO)
+logger_active = logger.isEnabledFor(logging.DEBUG)
 
-def split_image_into_sections(image, image_name, section_size=(1900, 1700)):
+def split_image_into_sections(image, image_name):
     """
     Splits an image into sections of specified size and saves the sections.
 
@@ -17,7 +16,6 @@ def split_image_into_sections(image, image_name, section_size=(1900, 1700)):
     Args:
     - image (numpy.ndarray): The image to be split, in the form of a numpy array.
     - image_name (str): The name of the original image. This is used to create the folder structure for saving sections.
-    - section_size (tuple): A tuple (width, height) specifying the size of each section. Default is (1900, 1700).
 
     Returns:
     - list: A list of numpy arrays, each representing a section of the original image.
@@ -26,20 +24,12 @@ def split_image_into_sections(image, image_name, section_size=(1900, 1700)):
     """
     sections = []
     locations = []
-    x_step, y_step = section_size
+    save_sections_path= ""
+    x_step, y_step = global_params.section_size
     y_max, x_max, _ = image.shape
     x_step = min(x_step,x_max) # Handle images of lower size than the section 
     y_step = min(y_step,y_max)
 
-    save_sections_path = ""
-    if(logger_active):
-        image_name = os.path.splitext(image_name)[0]
-        save_sections_path = f'temp/sections/{image_name}'
-        try: 
-            shutil.rmtree(save_sections_path) # Delete the path 
-        except:
-            pass 
-        os.makedirs(save_sections_path, exist_ok=True)
 
     count = 0 
     for y in range(0, y_max, y_step):
@@ -49,6 +39,9 @@ def split_image_into_sections(image, image_name, section_size=(1900, 1700)):
             section = image[y:y_end, x:x_end]
             sections.append(section)
             if(logger_active):
+                image_name = os.path.splitext(image_name)[0]
+                save_sections_path = f'{global_params.temp_dir}/sections/{image_name}'
+                os.makedirs(save_sections_path, exist_ok=True)
                 Image.fromarray(section).save(f'{save_sections_path}/section_{count}.jpg')
             count+=1
             locations.append([(y, y_end), (x, x_end)])

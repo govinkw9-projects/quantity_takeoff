@@ -1,5 +1,5 @@
 import numpy as np
-from core.config import global_params, settings
+from core.config import global_params, logger
 import logging
 import torch
 from torchvision import transforms
@@ -9,8 +9,6 @@ import faiss
 import numpy as np
 import os
 from PIL import Image ,ImageOps
-
-logger = settings.configured_logger
 
 
 def equalize_hist_rgb(img):

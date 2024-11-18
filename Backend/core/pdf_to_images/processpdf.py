@@ -1,5 +1,5 @@
 import os 
-from core.config import global_params, settings
+from core.config import global_params, logger
 from PIL import Image
 from fastapi import HTTPException, UploadFile
 import numpy as np 
@@ -11,8 +11,7 @@ import aiofiles
 import shutil 
 import logging
 
-logger = settings.configured_logger
-
+logger_active = logger.isEnabledFor(logging.DEBUG)
 
 def get_images_from_pdf(pdf_file_path: str, 
                         dpi: int = 200) -> List[Image.Image]:
@@ -55,14 +54,13 @@ def get_images_from_pdf(pdf_file_path: str,
     return images
 
 
-async def process_pdf(file: UploadFile, page_num: int = 1, section_size=(1700, 1900)) -> Tuple[str, List[str], List[np.ndarray], List[tuple], int, str]:
+async def process_pdf(file: UploadFile, page_num: int = 1) -> Tuple[str, List[str], List[np.ndarray], List[tuple], int, str]:
     """
     Process a PDF file to extract a specific page as an image, handling the file in memory.
 
     Args:
     - file (UploadFile): An uploaded file object from FastAPI.
     - page_num (int): The page number to extract from the PDF. Defaults to 1.
-    - section_size (tuple): The size of each section to split the image into. Defaults to (1700, 1900).
 
     Returns:
     - selected_page_image: nd.array Numpy image 
@@ -73,8 +71,7 @@ async def process_pdf(file: UploadFile, page_num: int = 1, section_size=(1700, 1
     Raises:
     - HTTPException: For invalid page numbers or processing errors.
     """
-    logger_active = logging.getLogger().isEnabledFor(logging.INFO)
-    temp_dir = 'temp'  
+      
     selected_page_image_path = ""
     try:
         # Read PDF into memory
@@ -87,13 +84,13 @@ async def process_pdf(file: UploadFile, page_num: int = 1, section_size=(1700, 1
 
         # Extract the specified page
         page = doc.load_page(page_num - 1)
-        pix = page.get_pixmap(dpi= 200)
+        pix = page.get_pixmap(dpi= global_params.dpi)
         img = Image.open(BytesIO(pix.tobytes("png")))
 
         # Optionally save the extracted page for debugging
         if logger_active:
-            os.makedirs(temp_dir, exist_ok=True)
-            selected_page_image_path = os.path.join(temp_dir, f'{file.filename}_page_{page_num}.png')
+            os.makedirs(global_params.temp_dir, exist_ok=True)
+            selected_page_image_path = os.path.join(global_params.temp_dir, f'{file.filename}_page_{page_num}.png')
             img.save(selected_page_image_path, 'PNG')
 
         selected_page_image = np.array(img)
@@ -101,8 +98,7 @@ async def process_pdf(file: UploadFile, page_num: int = 1, section_size=(1700, 1
         # Split image into sections
         save_sections_path, sections, locations = split_image_into_sections(
             image=selected_page_image, 
-            image_name=file.filename,
-            section_size=section_size
+            image_name=file.filename
         )
 
         return selected_page_image,selected_page_image_path, save_sections_path, sections, locations

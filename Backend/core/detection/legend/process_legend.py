@@ -1,21 +1,18 @@
 import numpy as np
 import cv2
-from core.config import global_params, settings
+from core.config import global_params, logger
 from fastapi import HTTPException
-from core.segment_symbol.yolov8.inference import infer_onnx
+from core.detection.inference import infer_onnx
 import os
 from typing import Tuple, List
 import io
 import os
-import subprocess
 import shutil 
 import logging
 
 
-logger = settings.configured_logger
-
     
-async def process_symbol(file, save_symbols_path) -> Tuple[str, int, List[np.ndarray]]:
+async def detection_legend(file, save_symbols_path) -> Tuple[str, int, List[np.ndarray]]:
     """
     Process an uploaded image file.
 
@@ -27,7 +24,7 @@ async def process_symbol(file, save_symbols_path) -> Tuple[str, int, List[np.nda
     Returns:
     - Tuple[str, int]: A message and HTTP status code.
     """
-    logger_active = logger.isEnabledFor(logging.INFO)
+    logger_active = logger.isEnabledFor(logging.DEBUG)
 
     symbols_generated = []
     try:
@@ -38,7 +35,6 @@ async def process_symbol(file, save_symbols_path) -> Tuple[str, int, List[np.nda
         logger.info(f"Legend image shape: {image.shape}")
 
         image_to_show_legend = image.copy()
-        file_paths = []
         if(logger_active):
             try: 
                 shutil.rmtree(save_symbols_path)
@@ -46,7 +42,7 @@ async def process_symbol(file, save_symbols_path) -> Tuple[str, int, List[np.nda
                 pass 
             os.makedirs(save_symbols_path, exist_ok=True)
 
-        bboxes = infer_onnx(image=image)
+        bboxes = infer_onnx(image=image,model_path=global_params.legend_yolo_model_path)
 
         for i , box in enumerate(bboxes):
             # Extract the top left corner, width, and height
@@ -55,12 +51,12 @@ async def process_symbol(file, save_symbols_path) -> Tuple[str, int, List[np.nda
             # Proceed only if the area is greater than 0
             if area > 0:
                 roi = image[int(y): int(y_end), int(x): int(x_end)]
-                logger.info(f" idx: {i} cropped detected symbol shape: {roi.shape}")
+                logger.debug(f" idx: {i} cropped detected symbol shape: {roi.shape}")
                 if logger_active:
                     cv2.rectangle(image_to_show_legend, (int(x), int(y)), (int(x_end), int(y_end)), (255, 0, 0), 2)
                     file_path = f"{save_symbols_path}/symbol{i}.jpg"
                     cv2.imwrite(file_path, cv2.cvtColor(roi, cv2.COLOR_RGB2BGR))
-                    logger.info(f"Symbol {i} with shape {roi.shape}")
+                    logger.debug(f"Symbol {i} with shape {roi.shape}")
                 symbols_generated.append(roi)
         if logger_active:
             cv2.imwrite(f"{save_symbols_path}/all_symbol.jpg", image_to_show_legend)

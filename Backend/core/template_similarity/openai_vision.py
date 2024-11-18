@@ -8,7 +8,7 @@ import os
 import matplotlib.pyplot as plt 
 import base64
 from io import BytesIO
-from core.config import global_params, settings
+from core.config import global_params, logger, settings
 import logging
 import openai 
 import requests
@@ -16,8 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 import time 
 import asyncio
 
-logger = settings.configured_logger
-logger_active = logger.isEnabledFor(logging.INFO)
+logger_active = logger.isEnabledFor(logging.DEBUG)
 
 
 async def call_openai_vision(base64_image: bytes):

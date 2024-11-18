@@ -2,6 +2,7 @@ import onnxruntime
 import numpy as np 
 import cv2 
 from typing import List, Tuple
+from core.config import logger
 
 opt_session = onnxruntime.SessionOptions()
 opt_session.enable_mem_pattern = False
@@ -11,7 +12,6 @@ opt_session.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_DI
 
 #model = YOLO('detect/train2/weights/best.pt')
 #model.export(format="onnx",imgsz=[1024])  # export the model to ONNX format
-model_path = 'core/template_matching/yolov8/best.onnx'
 EP_list = ['CUDAExecutionProvider', 'CPUExecutionProvider']
 EP_list = ['CPUExecutionProvider']
 
@@ -84,9 +84,10 @@ def xywh2xyxy(x):
     return y
 
 
-def infer_onnx(image: np.ndarray = np.zeros((1024, 1024, 3)), 
-               conf_threshold: float = 0.01, 
-               nms_threshold: float = 0.01) -> np.ndarray:
+def infer_onnx(model_path:str, 
+               image: np.ndarray = np.zeros((640, 640, 3)), 
+               conf_threshold: float = 0.1, 
+               nms_threshold: float = 0.1) -> np.ndarray:
     """
     Perform inference on an image using an ONNX model and apply post-processing.
 
@@ -126,7 +127,6 @@ def infer_onnx(image: np.ndarray = np.zeros((1024, 1024, 3)),
     boxes_xywh *= np.array([image_width, image_height, image_width, image_height])
     boxes_xywh = boxes_xywh.astype(np.int32)
 
-    
     boxes_xyxy = xywh2xyxy(boxes_xywh)
 
     indices = nms(boxes_xyxy, scores, iou_threshold=nms_threshold)

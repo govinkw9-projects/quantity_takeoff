@@ -1,27 +1,62 @@
 from pydantic_settings import BaseSettings
 import logging
+import os 
+from dotenv import load_dotenv
+load_dotenv()
+
+if(os.environ.get("LOGGER_LEVEL")=="info"):
+     log_level = logging.INFO
+else:
+     log_level = logging.DEBUG
+
+def configured_logger():
+
+        logger = logging.getLogger("uvicorn")
+        logger.setLevel(log_level)
+
+        while logger.hasHandlers():
+            logger.handlers.clear()
+
+        handler = logging.StreamHandler()
+        handler.setLevel(log_level)
+
+            # Create formatter
+        formatter = logging.Formatter(
+                fmt="%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S"
+            )
+        
+        handler.setFormatter(formatter)
+
+        logger.addHandler(handler)
+
+        return logger
+
 
 class Settings(BaseSettings):
     api_key: str
-    
-    # Initialize and configure the logger based on settings
-    @property
-    def configured_logger(self):
-        logging.basicConfig(level=logging.INFO)
-        logger = logging.getLogger("uvicorn")
-        logger.setLevel(logging.ERROR)
-        logger.setLevel(logging.INFO)
-        return logger
+    logger_level: str
 
     class Config:
         env_file = ".env"
 
 
-    
+
 class GlobalParams():
+    temp_dir = 'temp'
+
+
     # Pdf image to section conversion 
     intensity_threshold = 0.0 
+    dpi: int =200
     section_size = (1900, 1500)
+
+
+    # legend symbol detection 
+    legend_yolo_model_path:str = 'core/detection/legend//best.onnx'
+    if(not os.path.exists(legend_yolo_model_path)): 
+        raise FileNotFoundError(f"{legend_yolo_model_path} not found ") 
+
 
     # Template matching params 
     threshold = 0.80 
@@ -32,6 +67,9 @@ class GlobalParams():
     image_similarity_imgsize = (64,64)
     image_similarity_weight_file = "core/template_similarity/onnx_weights/siamese_network.onnx"
     degrees = [0]
+    symbol_yolo_model_path:str = 'core/detection/symbol/best.onnx'
+    if(not os.path.exists(symbol_yolo_model_path)): 
+        raise FileNotFoundError(f"{symbol_yolo_model_path} not found ") 
 
     # Visualization 
     color_lists = [
@@ -45,18 +83,7 @@ class GlobalParams():
         (0,0,128),
         (0,128,128),
         (160,82,45)
-
-
-
-
-
-
-
-
-
-
-
-]
+    ]
 
     
     # Segment anything config for symbol detection 
@@ -77,3 +104,4 @@ class GlobalParams():
 
 settings = Settings()
 global_params = GlobalParams()
+logger = configured_logger()

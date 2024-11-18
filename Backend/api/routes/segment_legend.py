@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from models import LegendTemplate
-from core.segment_symbol.yolov8.process_symbol import process_symbol as process_symbol_yolov8
+from core.detection.legend.process_legend import detection_legend
 from api.routes.utils import image_to_base64
 from fastapi import Security, HTTPException, Depends
 from core.apikey_auth import APIKeyAuth
@@ -36,7 +36,7 @@ async def get_images_from_legend(
     - HTTPException: If processing fails or an invalid page number is provided.
     """
 
-    symbols_generated = await process_symbol_yolov8(file=file,
+    symbols_generated = await detection_legend(file=file,
                                                     save_symbols_path="temp")
     all_symbols_base64 = [image_to_base64(symbol) for symbol in symbols_generated]
 
