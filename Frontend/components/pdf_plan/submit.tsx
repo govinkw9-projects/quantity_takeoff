@@ -17,7 +17,7 @@ interface SubmitPopupProps {
   onCancel: () => void
   isOpen: boolean
   closeDialog: () => void
-  defaultName?: string  // New prop for default name
+  defaultName?: string  
 }
 
 export function SubmitPopup({ onSubmit, onCancel, isOpen, closeDialog, defaultName = "" }: SubmitPopupProps) {

@@ -495,13 +495,14 @@ const getColorForName = (name: string) => {
     const container = scrollContainerRef.current;
     const canvas = overlayCanvasRef.current;
   
-
     // Get the rectangle's position relative to the viewport
     const rectLeft = selectedRect.x - container.scrollLeft;
     const rectTop = selectedRect.y - container.scrollTop;
     const rectRight = rectLeft + selectedRect.width;
     const rectBottom = rectTop + selectedRect.height;
   
+    setdefaultName(selectedRect.name)
+
     // Check if the rectangle is fully within the view
     const isFullyInView =
       rectLeft >= 0 &&
