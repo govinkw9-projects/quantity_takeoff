@@ -489,11 +489,27 @@ const getColorForName = (name: string) => {
   useEffect(() => {
     if (selectedRectId == null || !scrollContainerRef.current || !overlayCanvasRef.current) return;
   
-    const selectedRect = boundingBoxes.find((box:Rectangle) => box.id === selectedRectId);
+    const selectedRect = boundingBoxes.find((box: Rectangle) => box.id === selectedRectId);
     if (!selectedRect) return;
   
     const container = scrollContainerRef.current;
     const canvas = overlayCanvasRef.current;
+  
+
+    // Get the rectangle's position relative to the viewport
+    const rectLeft = selectedRect.x - container.scrollLeft;
+    const rectTop = selectedRect.y - container.scrollTop;
+    const rectRight = rectLeft + selectedRect.width;
+    const rectBottom = rectTop + selectedRect.height;
+  
+    // Check if the rectangle is fully within the view
+    const isFullyInView =
+      rectLeft >= 0 &&
+      rectTop >= 0 &&
+      rectRight <= container.clientWidth &&
+      rectBottom <= container.clientHeight;
+  
+    if (isFullyInView) return; // Don't scroll if the rectangle is already fully in view
   
     // Calculate the center of the rectangle
     const rectCenterX = selectedRect.x + selectedRect.width / 2;
@@ -509,13 +525,15 @@ const getColorForName = (name: string) => {
   
     const scrollLeft = Math.max(0, Math.min(desiredScrollLeft, maxScrollLeft));
     const scrollTop = Math.max(0, Math.min(desiredScrollTop, maxScrollTop));
-    
+  
+    // Perform the scroll
     container.scrollTo({
       top: scrollTop,
       left: scrollLeft,
       behavior: "smooth",
     });
-  }, [selectedRectId]);
+  }, [selectedRectId, boundingBoxes]);
+  
   
   return (
     <div
