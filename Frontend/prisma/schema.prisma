@@ -1,0 +1,26 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model AudioData {
+  id          Int      @id @default(autoincrement())
+  fileName    String @unique
+  filePath     String
+  transcript     String @db.Text
+  reportPath    String
+  filledReportPath   String
+  creationdate DateTime @default(now())
+}
+
+
+model ReportFormData {
+  id          Int      @id @default(autoincrement())
+  fileName    String @unique
+  filePath     String
+  creationdate DateTime @default(now())
+}
