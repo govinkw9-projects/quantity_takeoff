@@ -128,3 +128,58 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+
+
+.cache/nix/binary-cache-v6.sqlite
+.cache/nix/binary-cache-v6.sqlite-journal
+.cache/pypoetry/cache/repositories/PyPI/01/92/fb/51/ac/f8/05/4b/0192fb51acf8054be6b8c1687f009eb489438cf697f476e5ba731be8247ca4a0
+.cache
+.pythonlibs
+
+# .gitignore
+
+# Python artifacts
+*.pyc
+*.pyo
+*.pyd
+__pycache__
+*.py[co]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Flask specific
+instance/
+
+# Databases
+*.sqlite
+
+# Logs
+logs/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE/Editor specific
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+.env 
+
+cookies.txt
+instruction.txt
+
+*.pt 
+*.pth 
+*.onnx
