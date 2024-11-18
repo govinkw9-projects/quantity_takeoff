@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { ClerkProvider } from '@clerk/nextjs'
 import RootSharedLayout from '@/app/(root)/shared_layout'
 import { polyfillPromiseWithResolvers } from "@/lib/polyfilsResolver";
 import { Toaster } from "@/components/ui/toaster"
@@ -23,7 +22,6 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
       <html lang="en">
         <body className={inter.className}>
           <RootSharedLayout>
@@ -32,6 +30,5 @@ export default function RootLayout({
           <Toaster />
         </body>
       </html>
-    </ClerkProvider>
   )
 }
