@@ -11,7 +11,25 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar
 } from "@/components/ui/sidebar";
+
+import {
+  MoreHorizontal,
+  StarOff,
+  Trash2,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button"
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 import { usePdfPlanStore } from "@/store/PdfPlanStore";
 import { Rectangle } from "@/models/pdf_plan";
 
@@ -21,6 +39,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const setSelectedRectId = usePdfPlanStore((state) => state.setSelectedRectId);
   const currentRect = usePdfPlanStore((state) => state.currentRect);
   const setCurrentRect = usePdfPlanStore((state) => state.setCurrentRect);
+
+  const { isMobile } = useSidebar();
 
   // Ref to store references to each sidebar item
   const itemRefs = React.useRef<{ [key: number]: HTMLAnchorElement | null }>({});
@@ -44,6 +64,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       }, 100);
     }
   }, [selectedRectId]);
+
+
+  const handleRename = (boxId: number) => {
+    console.log("boxId", boxId)
+
+  }
+
+  const handleDelete = (boxId: number) => {
+  }
+
 
   return (
     <Sidebar {...props}>
@@ -72,22 +102,68 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               const isSelected = box.id === selectedRectId;
               return (
                 <SidebarMenuButton key={box.id} asChild>
-                  <a
-                    href="#"
-                    onClick={() => handleRectClick(box.id)}
-                    ref={(el) => {
-                      itemRefs.current[box.id] = el;
-                    }}
-                    className={`block p-2 rounded-md ${
-                      isSelected
-                        ? "bg-blue-500 text-white border-l-4 border-blue-700"
-                        : "hover:bg-gray-100 border-l-4 border-transparent"
-                    }`}
-                  >
-                    <span style={{ color: isSelected ? "inherit" : box.color }}>
-                      {box.name}
-                    </span>
-                  </a>
+                  <div className="relative flex items-center justify-between">
+                    <a
+                      href="#"
+                      onClick={() => handleRectClick(box.id)}
+                      ref={(el) => {
+                        itemRefs.current[box.id] = el;
+                      }}
+                      className={`block p-2 rounded-md ${
+                        isSelected
+                          ? "bg-blue-500 text-white border-l-4 border-blue-700"
+                          : "hover:bg-gray-100 border-l-4 border-transparent"
+                      }`}
+                    >
+                      <span style={{ color: isSelected ? "inherit" : box.color }}>
+                        {box.name}
+                      </span>
+                    </a>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger>
+                        <MoreHorizontal className="text-muted-foreground" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        className="w-56 rounded-lg"
+                        side={isMobile ? "bottom" : "right"}
+                        align={isMobile ? "end" : "start"}
+                      >
+                        <DropdownMenuItem>
+                          <StarOff className="text-muted-foreground" />
+                            <a
+                                href="#"
+                                onClick={() => handleRename(box.id)}
+                                ref={(el) => {
+                                  itemRefs.current[box.id] = el;
+                                }}
+                              >
+                              <span >
+                              Rename
+                              </span>
+                            </a>
+ 
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>
+                          <Trash2 className="text-muted-foreground" />
+
+                              <a
+                                  href="#"
+                                  onClick={() => handleDelete(box.id)}
+                                  ref={(el) => {
+                                    itemRefs.current[box.id] = el;
+                                  }}
+                                >
+                                <span >
+                                Delete
+                                </span>
+                              </a>
+
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </SidebarMenuButton>
               );
             })}
