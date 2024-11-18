@@ -166,6 +166,10 @@ async def get_templates_from_pdf(
     """
 
 
+    template_response = []
+
+
+
     save_symbols_path = global_params.temp_dir
     start_time = time.time()
     # Step1: Get the sections of the page of the pdf which can be found in sections_in_folder
@@ -192,8 +196,10 @@ async def get_templates_from_pdf(
                                                                                       sections_nparray_list,
                                                                                       locations_sections)
 
-    template_response = []
     
+
+
+
     json_data = {}
 
     for idx,template_np_image in enumerate(symbols_nparray_list):
@@ -266,7 +272,7 @@ async def get_templates_from_pdf(
                                                         uncertain_iou=1.0,
                                                         area=0,
                                                         color=[(255,255,255)], 
-                                                        symbol_Type=idx)
+                                                        symbol_Type=0)
         template_response.append(response_this_template)
 
 

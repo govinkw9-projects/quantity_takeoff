@@ -537,67 +537,70 @@ const getColorForName = (name: string) => {
   
   
   return (
-    <div
-      onKeyDown={handleKeyDown}
-      tabIndex={0} // Make div focusable for keyboard events
-      className="flex flex-col h-[90vh]w-full overflow-hidden" // Hide outer scrollbar with overflow-hidden
-    >
-      <h1 className="text-xl font-bold text-center mb-4">Analysis</h1>
-  
-      <SubmitPopup
-        onSubmit={handleDialogSubmit}
-        onCancel={handleDialogCancel}
-        isOpen={isDialogOpen}
-        closeDialog={() => setDialogOpen(false)}
-        defaultName={defaultName}
-      />
-  
+    <>
       <div
-        ref={scrollContainerRef}
-        style={{
-          width: '100%',
-          height: '100%',
-          overflow: 'auto', // Enable scrolling only on this div
-          border: '1px solid #ccc',
-          position: 'absolute', // Relative positioning for absolute children
-        }}
-        className="flex-1"
+        onKeyDown={handleKeyDown}
+        tabIndex={0}  
+        className="flex flex-col h-[90vh]w-full overflow-hidden pt-2 pb-2 pl-10" 
       >
-        <canvas ref={pdfCanvasRef} style={{ border: '1px solid black' }} />
-        <canvas
-          ref={overlayCanvasRef}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            cursor: 'crosshair',
-          }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onContextMenu={handleContextMenu} // Add context menu handler
+    
+        <SubmitPopup
+          onSubmit={handleDialogSubmit}
+          onCancel={handleDialogCancel}
+          isOpen={isDialogOpen}
+          closeDialog={() => setDialogOpen(false)}
+          defaultName={defaultName}
         />
-  
-        {contextMenuVisible && selectedRect && (
-          <div
+    
+        <div
+          ref={scrollContainerRef}
+          style={{
+            width: '90%',
+            height: '90%',
+            overflow: 'auto', // Enable scrolling only on this div
+            border: '1px solid #ccc',
+            position: 'absolute', // Relative positioning for absolute children
+          }}
+          className="flex-1 "
+        >
+          <canvas ref={pdfCanvasRef} style={{ border: '1px solid black' }} />
+          <canvas
+            ref={overlayCanvasRef}
             style={{
               position: 'absolute',
-              top: adjustedTop + 90,
-              left: adjustedLeft + 90,
-              zIndex: 1000,
-              background: 'white',
-              border: '1px solid #ccc',
-              padding: '8px',
-              borderRadius: '4px',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+              top: 0,
+              left: 0,
+              cursor: 'crosshair',
             }}
-          >
-            <Button type="button" onClick={handleDeleteRectangle}>
-              Delete
-            </Button>
-          </div>
-        )}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onContextMenu={handleContextMenu} // Add context menu handler
+          />
+    
+          {contextMenuVisible && selectedRect && (
+            <div
+              style={{
+                position: 'absolute',
+                top: adjustedTop + 90,
+                left: adjustedLeft + 90,
+                zIndex: 1000,
+                background: 'white',
+                border: '1px solid #ccc',
+                padding: '8px',
+                borderRadius: '4px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+              }}
+            >
+              <Button type="button" onClick={handleDeleteRectangle}>
+                Delete
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+          
+    </>
+
   );
 }  
