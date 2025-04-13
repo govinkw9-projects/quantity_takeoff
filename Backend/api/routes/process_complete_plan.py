@@ -55,6 +55,7 @@ async def process_symbols_detection(image: np.ndarray,
     except Exception as ex: 
         logger.info(f"Got error while performing detection of symbols: {ex}")
 
+    logger.debug(f"Detected {len(processed_boxes)} symbols in the complete plan.")
     if(logger_active):
         try:
             json_data = {}
@@ -207,7 +208,8 @@ async def get_templates_from_pdf(
         logger.debug(f"Processing template matching for symbol {idx+1} out of {len(symbols_nparray_list)}") 
         
         refined_bounding_boxes = await filter_bounding_boxes(boxes=all_adjusted_boxes,
-                                                             full_image=drawn_original_complete_image,target_template=template_np_image)
+                                                             full_image=drawn_original_complete_image,
+                                                             target_template=template_np_image)
 
         if(logger_active):
             try:

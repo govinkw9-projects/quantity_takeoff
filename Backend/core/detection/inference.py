@@ -2,7 +2,7 @@ import onnxruntime
 import numpy as np 
 import cv2 
 from typing import List, Tuple
-from core.config import logger
+from core.config import global_params, logger
 
 opt_session = onnxruntime.SessionOptions()
 opt_session.enable_mem_pattern = False
@@ -12,8 +12,6 @@ opt_session.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_DI
 
 #model = YOLO('detect/train2/weights/best.pt')
 #model.export(format="onnx",imgsz=[1024])  # export the model to ONNX format
-EP_list = ['CUDAExecutionProvider', 'CPUExecutionProvider']
-EP_list = ['CPUExecutionProvider']
 
 def nms(boxes: np.ndarray, scores: np.ndarray, iou_threshold: float) -> List[int]:
     """
@@ -99,6 +97,7 @@ def infer_onnx(model_path:str,
     Returns:
     - boxes_xyxy[indices]: np.array, filtered and processed bounding boxes.
     """
+    logger.debug(f"Predicting symbols...")
     ort_session = onnxruntime.InferenceSession(model_path)
     input_shape = ort_session.get_inputs()[0].shape
     input_name = ort_session.get_inputs()[0].name
@@ -114,6 +113,7 @@ def infer_onnx(model_path:str,
 
     outputs = ort_session.run([output_name], {input_name: input_tensor})[0]
     predictions = np.squeeze(outputs).T
+    logger.debug(f"Prediction complete...")
 
     scores = np.max(predictions[:, 4:], axis=1)
     valid_indices = scores > conf_threshold

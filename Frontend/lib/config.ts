@@ -6,6 +6,6 @@ export const Configuration = {
     process_complete_plan_api: "http://0.0.0.0:8080/process_complete_plan?page_num=1", 
     S3_BUCKET_NAME:"dpasaps",
     localAudioLocation: '../DATA', 
-     dpi: 200, // DPI used when converting PDF to image
+     dpi: 600, // DPI used when converting PDF to image
     pdfJsScaleFactor : 7.0 // Scale factor used in PDF.js   
 }

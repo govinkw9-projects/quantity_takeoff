@@ -48,21 +48,24 @@ class GlobalParams():
 
     # Pdf image to section conversion 
     intensity_threshold = 0.0 
-    dpi: int =200
-    section_size = (1900, 1500)
+    dpi: int =600
+    section_size = (512, 512)
 
 
     # legend symbol detection 
     legend_yolo_model_path:str = 'core/detection/legend//best.onnx'
     if(not os.path.exists(legend_yolo_model_path)): 
         raise FileNotFoundError(f"{legend_yolo_model_path} not found ") 
+    EP_list = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+
+
 
 
     # Template matching params 
     threshold = 0.80 
     nms_threshold = 0.5 
     run_in_parallel = True # Always true, just adjust the number of workers. 
-    max_workers = 1
+    max_workers = 4
     image_similarity_threshold = 0.3
     image_similarity_imgsize = (64,64)
     image_similarity_weight_file = "core/template_similarity/onnx_weights/siamese_network.onnx"
