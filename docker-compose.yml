@@ -1,0 +1,97 @@
+version: '3.9'
+
+services:
+  frontend:
+    container_name: takeoff_frontend
+    build:
+      context: .
+      dockerfile: DockerfileFrontend
+    image: takeoff_frontend:latest
+    command: ["npm", "run", "dev"]
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./.env_Frontend
+    volumes:
+      - takeoff_frontend_node_modules:/app/FrontEnd/node_modules
+    depends_on:
+      - mysql
+    restart: always
+    networks:
+      - web
+
+  backend:
+    container_name: takeoff_backend
+    build:
+      context: .
+      dockerfile: DockerfileBackend
+    image: takeoff_backend:latest
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env_Backend
+    volumes:
+      - ./Backend/:/app/BackEnd/
+    depends_on:
+      - mysql
+    shm_size: 2gb
+    restart: always
+    networks:
+      - web
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    ports:
+      - "8080:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    restart: always
+    networks:
+      - web
+
+  mysql:
+    container_name: mysql
+    image: mysql:8.0.36
+    environment:
+      MYSQL_DATABASE: "takeoff_dbdata"
+      MYSQL_ROOT_PASSWORD: S05eshs*7qZX9gPCV*
+      MYSQL_PASSWORD: S05eshs*7qZX9gPCV*
+      MYSQL_TCP_PORT: 3306
+    ports:
+      - "3306:3306"
+    volumes:
+      - takeoff_dbdata:/var/lib/mysql
+    restart: always
+    networks:
+      - web
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    depends_on:
+      - mysql
+    volumes:
+      - ./php.ini:/usr/local/etc/php/conf.d/php.ini:ro
+    restart: always
+    networks:
+      - web
+
+volumes:
+  takeoff_frontend_node_modules:
+  takeoff_dbdata:
+
+networks:
+  web:
+    driver: bridge
