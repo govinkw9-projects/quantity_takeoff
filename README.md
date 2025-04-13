@@ -45,9 +45,8 @@ TakeOff is an application to perform [quantity takeoff of construction drawings]
 
 ### Accessing the Application
 
-- **Frontend:** Accessible at [http://localhost:3000](http://localhost:3000) (depending on your Nginx configuration, this might also be accessible via the proxy on port 8080).
+- **Frontend:** Accessible at [http://localhost:3000](http://localhost:3000)).
 - **Backend API:** Accessible at [http://localhost:8000](http://localhost:8000).
-- **Nginx Reverse Proxy:** For HTTP traffic, access [http://localhost:8080](http://localhost:8080). For HTTPS, ensure you have your SSL certificates in place.
 - **phpMyAdmin:** Accessible at [http://localhost:8081](http://localhost:8081) for managing your MySQL databases.
 
 <p align="center">
@@ -79,6 +78,8 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-By following these steps and guidelines, developers and operators can quickly get the TakeOff Application running in their own environment. For additional support or questions, please refer to the project's issue tracker or contact the maintainers.
+## 🙌 Acknowledgements
+
+Developed by [Kishan Govind](https://github.com/kgovind0001).
 
 ---
