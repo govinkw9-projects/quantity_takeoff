@@ -3,7 +3,7 @@ export const Configuration = {
     transcript_ws : "ws://localhost:8000/ws/transcribe", //websocket connection to transcript audio
     transcript_api: "http://localhost:8000/api/transcribe", 
     fill_report_transcribe_api: "http://localhost:8000/api/fillpdf_transcribe",
-    process_complete_plan_api: "http://0.0.0.0:8080/process_complete_plan?page_num=1", 
+    process_complete_plan_api: "http://localhost:8000/process_complete_plan?page_num=1", 
     S3_BUCKET_NAME:"dpasaps",
     localAudioLocation: '../DATA', 
      dpi: 600, // DPI used when converting PDF to image
