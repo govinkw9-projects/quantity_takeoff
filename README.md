@@ -50,6 +50,11 @@ TakeOff is an application to perform [quantity takeoff of construction drawings]
 - **Nginx Reverse Proxy:** For HTTP traffic, access [http://localhost:8080](http://localhost:8080). For HTTPS, ensure you have your SSL certificates in place.
 - **phpMyAdmin:** Accessible at [http://localhost:8081](http://localhost:8081) for managing your MySQL databases.
 
+<p align="center">
+  <img src="assets/sample-result.png" alt="Sample Result" width="600"/>
+</p>
+
+
 ### Stopping and Restarting
 
 To stop your application, you can use:
